@@ -38,13 +38,16 @@ class DataTable:
                 for idx, item in enumerate(columnList):
                     self.colNameIdxMap[item] = idx #建立名称与列索引的对应关系             
                 self.storage = self.private_csvRead(f, sep)
-
+        elif columnsNames is not None: # 建立一个只有表头的 空表
+            self.colNameIdxMap = OrderedDict()
+            for idx, item in enumerate(columnsNames):
+                self.colNameIdxMap[item] = idx  # 建立名称与列索引的对应关系
         else: # 从其他函数产生的数据中创建表
             # todo: 检查输入的合法性 不应该是一个空字典
 
             for idx, colName in enumerate(dataMat.keys()):
                 self.colNameIdxMap[colName] = idx # 创建列名称 索引位置映射
-            rowLength = len(dataMat[dataMat.keys()[0]])
+            rowLength = len(dataMat[list(dataMat.keys())[0]])
             for i in range(rowLength):
                 self.storage.append([None,] * len(dataMat))
             # 构建一个 rowLength * colLength 的 None 矩阵
@@ -279,6 +282,13 @@ class DataTable:
                 groupedDataTable[groupKey].appendRow(row)
         return groupedDataTable
 
+    def head(self, num):
+        """        
+        :param num:  
+        :return: 
+        """
+        return self.getRows(0, num)
+
     # 迭代操作
     def __iter__(self):
         """
@@ -315,7 +325,9 @@ class DataTable:
         strlist.append("\t" * len(self.colNameIdxMap))
         for row in self:
             strlist.append("\t".join([str(row[k]) for k in keys]))
-        return "\n".join(strlist) 
+        return "\n".join(strlist)
+
+
         
 
     
