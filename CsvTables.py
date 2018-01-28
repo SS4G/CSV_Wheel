@@ -288,7 +288,7 @@ class DataTable:
         """
         self.iterCount = 0 # 迭代位置设置为0
         return self
-        
+
     def next(self):
         """
         每次迭代 返回一个字典 key为对应的列名称 value为对应的值
