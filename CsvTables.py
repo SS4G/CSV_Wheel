@@ -1,6 +1,37 @@
 # -*- coding:utf-8 -*-
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
+class RowObject:
+    def __init__(self, dictLike):
+        self.storageDict = OrderedDict()
+        self.length = len(dictLike)
+        self.type = None
+
+    def __getitem__(self, item):
+        pass
+
+    def __setitem__(self, key, value):
+        pass
+
+    def __str__(self):
+        pass
+
+class ColumnObject:
+    def __init__(self, listLike, name=None):
+        pass
+
+    def __getitem__(self, item):
+        pass
+
+    def __setitem__(self, key, value):
+        pass
+
+    def __str__(self):
+        pass
+
+    def __len__(self):
+        pass
+
 class DataTable:
     """
     描述:
@@ -30,7 +61,7 @@ class DataTable:
         self.storage = []
         # $todo 增加列类型记录
         if csvFileName is not None: # 从文件创见表       
-            with open(csvFileName, "r") as f:
+            with open(csvFileName, "r", encoding="utf-8") as f:
                 if columnsNames is None:
                     columnList = f.readline().strip().split(sep)
                 else: 
@@ -67,7 +98,9 @@ class DataTable:
         """
         tmpResult = []
         for line in fileref:
-            elements = line.strip().split(sep)
+            line = line.replace("\n", "")
+            line = line.replace("\r", "")
+            elements = line.split(sep)
             elements = [None if len(e) == 0 else e for e in elements] # 将缺失值设为None
             tmpResult.append(elements)
         return tmpResult
@@ -81,7 +114,7 @@ class DataTable:
         :test status: Succeed
         """
         keys = self.colNameIdxMap.keys()
-        with open(outputFileName, "w") as f:
+        with open(outputFileName, "w", encoding="utf-8") as f:
             if not ignoreColName:
                 f.write(seq.join([k for k in keys]) + "\n")
             for row in self.storage:
@@ -109,8 +142,7 @@ class DataTable:
         :return: 获取单一的列
         :test status: Succeed
         """
-        targetColIdx = self.colNameIdxMap[colName]
-        return [row[targetColIdx] for row in self.storage]
+        return [row[colName] for row in self]
 
     # 列操作
     def getColumns(self, colNames):
@@ -122,14 +154,17 @@ class DataTable:
         :test status: Succeed
         """
         if isinstance(colNames, list):
-            dataMat = {}
+            dataMat = OrderedDict()
             for colName in colNames:
                 dataMat[colName] = self.private_get1column(colName)
             return DataTable(dataMat=dataMat)
         else:
             return self.private_get1column(colNames)
 
-    def appendColumn(self, columns):
+    def __getitem__(self, item):
+        return self.getColumns(item)
+
+    def appendColumns(self, columns):
         """
         :param cloumns 类似于字典的对象 key 为 columnname value为对应的列值 {k1: [v11, v12,..], k2: [v12, v22,..]...}
         :return: 
@@ -143,6 +178,10 @@ class DataTable:
             self.colLength += 1  # 列长度更新
             for rowIdx, row in enumerate(self.storage):
                 row.append(columns[colName][rowIdx])
+
+    def __setitem__(self, key, value):
+        pass
+        #self.appendColumns(key, )
 
     def get_1Row(self, rowIdx):
         """ 
@@ -258,8 +297,8 @@ class DataTable:
     #分组操作
     def groupBy(self, columns, keyFunc=None):
         """        
-        :param columns: 
-        :param keyFunc: 
+        :param columns: 参与groupby的列
+        :param keyFunc: 若 不为None 将参与group的列映射为特定值的函数 
         :return:
         :test status:  
         """
@@ -299,14 +338,15 @@ class DataTable:
         self.iterCount = 0 # 迭代位置设置为0
         return self
 
-    def next(self):
+    def __next__(self):
         """
         每次迭代 返回一个字典 key为对应的列名称 value为对应的值
         :test status:  
         """
         if self.iterCount < len(self.storage):
-            tmpDict = {}
+            tmpDict = OrderedDict()
             for k in self.colNameIdxMap:
+                #print(self.iterCount)
                 tmpDict[k] = self.storage[self.iterCount][self.colNameIdxMap[k]]
             self.iterCount += 1
             return tmpDict
@@ -321,10 +361,10 @@ class DataTable:
         """
         keys = self.colNameIdxMap.keys()
         strlist = []
-        strlist.append("\t".join([str(k) for k in keys]))
-        strlist.append("\t" * len(self.colNameIdxMap))
+        strlist.append("\t|".join([str(k) for k in keys]))
+        strlist.append("\t|" * len(self.colNameIdxMap))
         for row in self:
-            strlist.append("\t".join([str(row[k]) for k in keys]))
+            strlist.append("\t|".join([str(row[k]) for k in keys]))
         return "\n".join(strlist)
 
 
